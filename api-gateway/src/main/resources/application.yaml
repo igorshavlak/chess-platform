@@ -1,0 +1,56 @@
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: api-gateway
+            client-secret: E95Bz727rSqNpPV5FG4YutgVS78thFlb
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8888/realms/chess-platform-realm
+
+  cloud:
+    gateway:
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/users/**
+          filters:
+            - name: "RequestRateLimiter"
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+        - id: auth-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/auth/**
+          filters:
+            - name: "RequestRateLimiter"
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service: true
+      default-filters: -TokenRelay
+
+  application:
+    name: api-gateway
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    register-with-eureka: true
+    fetch-registry: true
+server:
+  port: 8082
