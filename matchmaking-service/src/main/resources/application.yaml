@@ -18,3 +18,8 @@ eureka:
     fetch-registry: true
 server:
   port: 8085
+
+game:
+  management:
+    service:
+      url: http://localhost:8080

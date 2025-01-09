@@ -1,5 +1,7 @@
 package com.absolute.chessplatform.matchmakingservice.services.impl;
 
+import com.absolute.chessplatform.matchmakingservice.clients.GameManagementClient;
+import com.absolute.chessplatform.matchmakingservice.entities.CreateGameRequest;
 import com.absolute.chessplatform.matchmakingservice.entities.Match;
 import com.absolute.chessplatform.matchmakingservice.entities.QueueEntry;
 import com.absolute.chessplatform.matchmakingservice.repositories.QueueRepository;
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class MatchmakingServiceImpl implements MatchmakingService {
 
     private final QueueRepository queueRepository;
+    private final GameManagementClient gameManagementClient;
 
     private static final int INITIAL_TOLERANCE = 100;
     private static final int TOLERANCE_INCREMENT = 50;
@@ -82,14 +85,14 @@ public class MatchmakingServiceImpl implements MatchmakingService {
 
                             Match match = new Match(UUID.randomUUID(), playerOneId, playerTwoId);
                             log.info("Match {} created between {} and {}", match.getId(), playerOneId, playerTwoId);
-                            //matchRepository.save(match);
+
 
                             queueRepository.removeFromQueue(playerOneId);
                             queueRepository.removeFromQueue(playerTwoId);
-
-                           // notificationService.notifyMatchFound(playerOneId, match.getMatchId(), playerTwoId);
-                           // notificationService.notifyMatchFound(playerTwoId, match.getMatchId(), playerOneId);
-
+                            CreateGameRequest request = new CreateGameRequest();
+                            request.setFirstPlayerId(playerOneId);
+                            request.setSecondPlayerId(playerTwoId);
+                            gameManagementClient.createGame(request);
                             return Optional.of(match);
                         }
                     }
