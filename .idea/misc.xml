@@ -8,6 +8,9 @@
     <file type="web" url="file://$PROJECT_DIR$/eureka-server" />
     <file type="web" url="file://$PROJECT_DIR$/game-management-service" />
     <file type="web" url="file://$PROJECT_DIR$/matchmaking-service" />
+    <file type="web" url="file://$PROJECT_DIR$/notification-service" />
+    <file type="web" url="file://$PROJECT_DIR$/social-community-service" />
+    <file type="web" url="file://$PROJECT_DIR$/training-lessons-service" />
     <file type="web" url="file://$PROJECT_DIR$/user-service" />
   </component>
   <component name="ProjectRootManager">

@@ -4,4 +4,5 @@ public enum GameStatus {
     CHECKMATE,
     DRAW,
     SURRENDER,
+    TIMEOUT
 }

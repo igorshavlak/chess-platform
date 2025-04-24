@@ -8,7 +8,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 public class Match {
-    private UUID id;
+    private UUID gameId;
     private UUID player1;
     private UUID player2;
 }

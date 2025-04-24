@@ -9,5 +9,7 @@ import java.util.UUID;
 public class EnqueueRequest {
 
     private UUID userId;
-    private int rating;
+    private String queueKey;
+    private Integer rating;
+    private boolean ranked;
 }

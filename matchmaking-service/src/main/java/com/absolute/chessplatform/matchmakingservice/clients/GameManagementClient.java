@@ -7,9 +7,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import java.util.UUID;
+
+
 @Component
-@FeignClient(name = "game-management-service", url = "${game.management.service.url}")
+@FeignClient(name = "game-management-service", url = "${game-management-service.url}")
 public interface GameManagementClient {
     @PostMapping("/api/games/create")
-    ResponseEntity<String> createGame(CreateGameRequest createGameRequest);
+    ResponseEntity<UUID> createGame(@RequestBody CreateGameRequest createGameRequest);
 }

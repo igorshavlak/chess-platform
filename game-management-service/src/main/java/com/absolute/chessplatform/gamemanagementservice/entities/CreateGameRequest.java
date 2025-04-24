@@ -10,6 +10,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateGameRequest {
-    public UUID firstPlayerId;
-    public UUID secondPlayerId;
+    private UUID gameId;
+    private UUID whitePlayerId;
+    private UUID blackPlayerId;
+    private GameMode gameMode;
+    private String timeControl;
 }

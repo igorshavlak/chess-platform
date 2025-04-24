@@ -11,7 +11,6 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Move {
-
     UUID gameId;
     String move;
 }

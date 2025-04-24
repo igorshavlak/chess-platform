@@ -1,5 +1,5 @@
 create table games(
-    game_id uuid primary key default gen_random_uuid(),
+    game_id uuid primary key unique not null,
     player_black_id uuid unique not null,
     player_white_id uuid unique not null,
     status varchar(20) not null check ( status in ('CHECKMATE', 'DRAW', 'SURRENDER') ),
