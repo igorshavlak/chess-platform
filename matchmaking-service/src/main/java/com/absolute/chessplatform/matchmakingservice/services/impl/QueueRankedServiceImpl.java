@@ -80,7 +80,8 @@ public class    QueueRankedServiceImpl implements MatchmakingService {
                 if (playerTwo.getRating() >= (playerOne.getRating() - dynamicTolerance) &&
                         playerTwo.getRating() <= (playerOne.getRating() + dynamicTolerance)) {
 
-                    CreateGameRequest match = new CreateGameRequest(UUID.randomUUID(), playerOneId, playerTwoId);
+                    //CreateGameRequest match = new CreateGameRequest(UUID.randomUUID(), playerOneId, playerTwoId);
+                    CreateGameRequest match = null;
                     log.info("Match {} created between {} and {}", match.getGameId(), playerOneId, playerTwoId);
 
 

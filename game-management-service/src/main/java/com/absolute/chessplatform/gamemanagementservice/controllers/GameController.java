@@ -1,6 +1,9 @@
 package com.absolute.chessplatform.gamemanagementservice.controllers;
+import com.absolute.chessplatform.gamemanagementservice.dtos.ActiveGameDTO;
+import com.absolute.chessplatform.gamemanagementservice.dtos.MoveResponseDTO;
 import com.absolute.chessplatform.gamemanagementservice.entities.*;
 import com.absolute.chessplatform.gamemanagementservice.services.GameService;
+import com.absolute.chessplatform.gamemanagementservice.services.SimulLobbyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,7 @@ import java.util.UUID;
 public class GameController {
     private final GameService gameService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final SimulLobbyService simulLobbyService;
 
     @MessageMapping("/move")
     public void handleMove(Move moveMessage, Principal principal) {
@@ -52,13 +56,15 @@ public class GameController {
     @PostMapping("/create")
     //@PreAuthorize("hasRole('USER')")
     public ResponseEntity<?> createGame(@RequestBody CreateGameRequest createGameRequest) {
-        UUID gameId = gameService.createGame(createGameRequest.getWhitePlayerId(), createGameRequest.getBlackPlayerId());
+        UUID gameId = gameService.createGame(createGameRequest);
         return ResponseEntity.ok(gameId);
     }
+
     @GetMapping("/getGameInfo/{gameId}")
     //@PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ActiveGame> getGameInfo(@PathVariable UUID gameId) {
-        ActiveGame activeGame = gameService.getGameInfo(gameId);
-        return ResponseEntity.ok(activeGame);
+    public ResponseEntity<ActiveGameDTO> getGameInfo(@PathVariable UUID gameId) {
+        ActiveGameDTO activeGameDTO = gameService.getGameInfo(gameId);
+        return ResponseEntity.ok(activeGameDTO);
     }
+
 }

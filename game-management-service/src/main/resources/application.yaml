@@ -1,4 +1,3 @@
-
 spring:
   security:
     oauth2:
@@ -26,3 +25,9 @@ eureka:
     fetch-registry: true
 server:
   port: 8088
+
+notification-service:
+  url: http://localhost:8090
+user-service:
+  url: http://localhost:8084
+

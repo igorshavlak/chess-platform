@@ -1,4 +1,4 @@
-package com.absolute.chessplatform.gamemanagementservice.entities;
+package com.absolute.chessplatform.gamemanagementservice.dtos;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

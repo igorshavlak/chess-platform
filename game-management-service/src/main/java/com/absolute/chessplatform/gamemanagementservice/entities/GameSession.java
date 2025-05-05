@@ -13,17 +13,26 @@ public class GameSession {
     private Boolean activePlayerIsWhite;
     private long lastMoveTimestamp;
     private final long incrementMillis;
+    private GameMode gameMode;
+    private String timeControl;
+    private boolean isRating;
     private ScheduledFuture<?> timeoutTask;
 
     public GameSession(UUID gameId,
                        long initialMillis,
-                       long incrementMillis) {
+                       long incrementMillis,
+                       GameMode gameMode,
+                       String timeControl,
+                       boolean isRating) {
         this.gameId = gameId;
         this.whiteRemaining = initialMillis;
         this.blackRemaining = initialMillis;
         this.incrementMillis = incrementMillis;
         this.activePlayerIsWhite = true;
         this.lastMoveTimestamp = System.currentTimeMillis();
+        this.gameMode = gameMode;
+        this.timeControl = timeControl;
+        this.isRating = isRating;
     }
     public long getRemainingTime(boolean isWhite) {
         if (isWhite) {

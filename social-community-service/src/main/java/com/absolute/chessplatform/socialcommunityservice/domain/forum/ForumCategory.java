@@ -15,5 +15,4 @@ public class ForumCategory {
     private final String description;
     private final Instant createdAt;
 
-
 }

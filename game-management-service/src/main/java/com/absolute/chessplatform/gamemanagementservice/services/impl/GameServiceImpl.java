@@ -1,5 +1,6 @@
 package com.absolute.chessplatform.gamemanagementservice.services.impl;
 
+import com.absolute.chessplatform.gamemanagementservice.dtos.ActiveGameDTO;
 import com.absolute.chessplatform.gamemanagementservice.entities.*;
 import com.absolute.chessplatform.gamemanagementservice.exception.GameEndException;
 import com.absolute.chessplatform.gamemanagementservice.exception.ResourceNotFoundException;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -25,24 +27,34 @@ public class GameServiceImpl implements GameService {
     private final NotificationService notificationService;
     private final RedisTemplate<String, ActiveGame> redisTemplate;
     private final TaskScheduler taskScheduler;
-    private static final long INITIAL_TIME_MILLIS = 10 * 60 * 1000;  // 10 хв
-    private static final long INCREMENT_MILLIS     = 2 * 1000;       // +2 сек/хід
+    private static final long INITIAL_TIME_MILLIS = 10 * 60 * 1000;
+    private static final long INCREMENT_MILLIS = 0;
 
     private static final String GAME_PREFIX = "game:";
 
     private final Map<UUID, GameSession> sessions = new ConcurrentHashMap<>();
+    private final Map<UUID, SimulSession> simulSessions = new ConcurrentHashMap<>();
 
 
-    public UUID createGame(UUID whitePlayerId, UUID blackPlayerId) {
+
+
+    public UUID createGame(CreateGameRequest createGameRequest) {
         log.info("Creating new game");
         UUID gameId = UUID.randomUUID();
+        UUID whitePlayerId = createGameRequest.getWhitePlayerId();
+        UUID blackPlayerId = createGameRequest.getBlackPlayerId();
         ActiveGame game = new ActiveGame(whitePlayerId, blackPlayerId, new ArrayList<>(), new Date());
         redisTemplate.opsForValue().set(GAME_PREFIX + gameId, game);
         log.info("Active game {} created between {} and {}", gameId, whitePlayerId, blackPlayerId);
-
-        GameSession session = new GameSession(gameId, INITIAL_TIME_MILLIS, INCREMENT_MILLIS);
+        String[] timeControl = createGameRequest.getTimeControl().split("\\+");
+        GameSession session = new GameSession(
+                gameId,
+                Long.parseLong(timeControl[0]) * 60 * 1000,
+                Long.parseLong(timeControl[1]) * 1000,
+                createGameRequest.getGameMode(),
+                createGameRequest.getTimeControl(),
+                createGameRequest.isRating());
         sessions.put(gameId, session);
-        scheduleTimeout(session);
 
         log.info("Game {} created and timeout scheduled", gameId);
         return gameId;
@@ -84,15 +96,13 @@ public class GameServiceImpl implements GameService {
             long afterInc = remaining + session.getIncrementMillis();
             session.setRemainingTime(session.getActivePlayerIsWhite(), afterInc);
 
+            session.setActivePlayerIsWhite(!session.getActivePlayerIsWhite());
+            session.setLastMoveTimestamp(now);
+
             ScheduledFuture<?> prev = session.getTimeoutTask();
             if (prev != null && !prev.isDone()) {
                 prev.cancel(false);
             }
-
-            session.setActivePlayerIsWhite(
-                    session.getActivePlayerIsWhite() ? false : true
-            );
-            session.setLastMoveTimestamp(now);
 
             scheduleTimeout(session);
         }
@@ -121,13 +131,24 @@ public class GameServiceImpl implements GameService {
         log.info("Game {} concluded with status {}", gameId, gameStatus.toString());
     }
 
-    public ActiveGame getGameInfo(UUID gameId) {
+    public ActiveGameDTO getGameInfo(UUID gameId) {
         String key = GAME_PREFIX + gameId.toString();
         ActiveGame game = redisTemplate.opsForValue().get(key);
-        if (game == null) {
+        GameSession session = sessions.get(gameId);
+        if (game == null || session == null) {
             throw new ResourceNotFoundException("Active game not found");
         }
-        return game;
+        return new ActiveGameDTO(
+                game.whitePlayerId(),
+                game.blackPlayerId(),
+                game.moves(),
+                game.startTime(),
+                session.getWhiteRemaining(),
+                session.getBlackRemaining(),
+                session.getGameMode(),
+                session.getTimeControl(),
+                session.isRating()
+        );
     }
     private void scheduleTimeout(GameSession gameSession) {
         boolean isActivePlayerIsWhite = gameSession.getActivePlayerIsWhite();
@@ -143,4 +164,8 @@ public class GameServiceImpl implements GameService {
         log.info("Timeout in game {}", gameId);
         concludeGame(gameId, GameStatus.TIMEOUT, !isActivePlayerIsWhite);
     }
+    public GameSession getGameSession(UUID gameId){
+        return sessions.get(gameId);
+    }
+
 }

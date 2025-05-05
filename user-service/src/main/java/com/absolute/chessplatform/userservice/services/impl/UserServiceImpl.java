@@ -1,28 +1,29 @@
 package com.absolute.chessplatform.userservice.services.impl;
 
 import com.absolute.chessplatform.userservice.dtos.*;
-import com.absolute.chessplatform.userservice.entities.CreateUserRequest;
+import com.absolute.chessplatform.userservice.entities.GameMode;
 import com.absolute.chessplatform.userservice.entities.UserProfile;
-import com.absolute.chessplatform.userservice.entities.UserSettings;
 import com.absolute.chessplatform.userservice.entities.UserStatistics;
+import com.absolute.chessplatform.userservice.exceptions.EmptyQueueException;
 import com.absolute.chessplatform.userservice.exceptions.ResourceNotFoundException;
 import com.absolute.chessplatform.userservice.repositories.UserProfileRepository;
 import com.absolute.chessplatform.userservice.repositories.UserSettingsRepository;
 import com.absolute.chessplatform.userservice.repositories.UserStatisticsRepository;
 import com.absolute.chessplatform.userservice.services.UserService;
-import jakarta.transaction.Transactional;
-import jakarta.ws.rs.core.Response;
 import lombok.RequiredArgsConstructor;
 import org.keycloak.admin.client.Keycloak;
-import org.keycloak.admin.client.resource.UsersResource;
 import org.keycloak.representations.idm.CredentialRepresentation;
-import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -100,7 +101,7 @@ public class UserServiceImpl implements UserService {
         return credential;
     }
 
-//
+
 //    @Override
 //    public UserResponseDTO getUserById(String id) {
 //        UserRepresentation user = keycloak.realm(realm).users().get(id).toRepresentation();
@@ -132,7 +133,7 @@ public class UserServiceImpl implements UserService {
 //    }
     public void updateUserStatistic(UUID userId, GameResultDTO gameResultDTO) {
         UserStatistics userStatistics = userStatisticsRepository
-                .findById_KeycloakIdAndId_Mode(userId,gameResultDTO.gameMode)
+                .findByUserIdAndMode(userId,gameResultDTO.gameMode)
                 .orElseThrow(() -> new ResourceNotFoundException("User statistics not found for ID: " + userId));
         userStatistics.setGamesPlayed(userStatistics.getGamesPlayed() + 1);
         if(gameResultDTO.isWinner){
@@ -146,6 +147,68 @@ public class UserServiceImpl implements UserService {
             //...
         }
         userStatisticsRepository.save(userStatistics);
-
+    }
+    public List<UserProfileDTO> getUsersProfilesByIds(List<UUID> uuids){
+        List<UserProfileDTO> userProfileDTOS = userProfileRepository.findAllById(uuids).stream()
+                .map(userProfile -> new UserProfileDTO(
+                        userProfile.getUserId(),
+                        userProfile.getUsername(),
+                        userProfile.getName(),
+                        userProfile.getSurname(),
+                        userProfile.getBio(),
+                        userProfile.getLocations(),
+                        userProfile.getSocialLinks())
+                ).toList();
+        if(userProfileDTOS.isEmpty()){
+            throw new EmptyQueueException("user profile list is empty");
+        }
+        return userProfileDTOS;
+    }
+    public UserStatisticsDTO getClassicStatistics(UUID userId) {
+        UserStatistics stat = userStatisticsRepository.findByUserIdAndMode(userId, GameMode.CLASSIC)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Statistics not found for user " + userId + " in mode CLASSIC"
+                ));
+        return new UserStatisticsDTO(
+                stat.getUserId(),
+                stat.getMode().name(),
+                stat.getRating(),
+                stat.getGamesPlayed(),
+                stat.getGamesWon(),
+                stat.getGamesLost(),
+                stat.getGamesDrawn(),
+                stat.getGamesResigned(),
+                stat.getGamesTimeout(),
+                stat.getGamesAbandoned(),
+                stat.getDrawsByAgreement(),
+                stat.getDrawsByStalemate(),
+                stat.getDrawsByRepetition(),
+                stat.getTournamentsPlayed(),
+                stat.getTournamentsWon(),
+                stat.getWinStreak(),
+                stat.getLossStreak(),
+                stat.getHighestRating(),
+                stat.getPeakRatingDate(),
+                stat.getRatingVolatility(),
+                stat.getTotalBrilliantMoves(),
+                stat.getRatingHistory(),
+                stat.getOpeningWinRate(),
+                stat.getLastGamePlayed()
+        );
+    }
+    public UserProfileDTO getUserProfile(UUID userId) {
+        UserProfile userProfile = userProfileRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Profile not found for user " + userId + " in mode CLASSIC"
+                ));
+        return new UserProfileDTO(
+                userProfile.getUserId(),
+                userProfile.getUsername(),
+                userProfile.getName(),
+                userProfile.getSurname(),
+                userProfile.getBio(),
+                userProfile.getLocations(),
+                userProfile.getSocialLinks()
+        );
     }
 }

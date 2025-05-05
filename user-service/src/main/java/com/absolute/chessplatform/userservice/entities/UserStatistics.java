@@ -20,8 +20,14 @@ import java.util.UUID;
 @NoArgsConstructor
 public class UserStatistics {
 
-    @EmbeddedId
-    private UserStatisticsId id;
+   @Id
+   @Column(name = "user_id")
+   private UUID userId;
+
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "mode", nullable = false)
+    private GameMode mode;
 
     // Рейтинги
     private int rating;

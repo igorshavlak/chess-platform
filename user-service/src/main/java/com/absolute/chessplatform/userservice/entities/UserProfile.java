@@ -17,10 +17,11 @@ import java.util.UUID;
 @NoArgsConstructor
 public class UserProfile {
     @Id
-    private UUID id;
-
-    @Column(name = "user_id", unique = true, nullable = false)
     private UUID userId;
+
+    private String username;
+    private String name;
+    private String surname;
 
     @Column(columnDefinition = "TEXT")
     private String bio;

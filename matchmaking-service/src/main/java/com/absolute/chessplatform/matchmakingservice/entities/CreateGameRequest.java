@@ -13,4 +13,7 @@ public class CreateGameRequest {
     public UUID gameId;
     public UUID whitePlayerId;
     public UUID blackPlayerId;
+    private GameMode gameMode;
+    private String timeControl;
+    private boolean isRating;
 }

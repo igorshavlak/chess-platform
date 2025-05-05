@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 @Component
-@FeignClient(name = "notification-service", url = "${notification-service.url}")
+@FeignClient(name = "notification-service", url = "${notification-service.url}/api/notifications")
 public interface NotificationServiceClient {
     @PostMapping("/api/notifications/send-game-found/")
     ResponseEntity<String> sendGameFoundNotification(@RequestBody GameFoundNotificationRequest request);

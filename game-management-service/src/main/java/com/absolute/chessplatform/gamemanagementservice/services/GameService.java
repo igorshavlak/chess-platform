@@ -1,17 +1,17 @@
 package com.absolute.chessplatform.gamemanagementservice.services;
 
 
-import com.absolute.chessplatform.gamemanagementservice.entities.ActiveGame;
-import com.absolute.chessplatform.gamemanagementservice.entities.GameStatus;
-import com.absolute.chessplatform.gamemanagementservice.entities.Move;
-import com.absolute.chessplatform.gamemanagementservice.entities.MoveResult;
+import com.absolute.chessplatform.gamemanagementservice.dtos.ActiveGameDTO;
+import com.absolute.chessplatform.gamemanagementservice.dtos.SimulSessionDTO;
+import com.absolute.chessplatform.gamemanagementservice.entities.*;
 
 import java.util.List;
 import java.util.UUID;
 
 public interface GameService {
-    UUID createGame(UUID whitePlayerId, UUID blackPlayerId);
+    UUID createGame(CreateGameRequest createGameRequest);
     MoveResult makeMove(UUID gameId, String move,UUID clientId);
     void concludeGame(UUID gameId, GameStatus gameStatus,boolean isWhitePlayerWinner);
-    ActiveGame getGameInfo(UUID gameId);
+    ActiveGameDTO getGameInfo(UUID gameId);
+    GameSession getGameSession(UUID gameId);
 }

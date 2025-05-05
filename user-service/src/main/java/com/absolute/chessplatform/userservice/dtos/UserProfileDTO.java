@@ -1,6 +1,5 @@
 package com.absolute.chessplatform.userservice.dtos;
 
-import jakarta.persistence.Column;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,7 +10,10 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserProfileDTO {
-
+    private UUID userId;
+    private String username;
+    private String name;
+    private String surname;
     private String bio;
     private String locations;
     private String socialLinks;

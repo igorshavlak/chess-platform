@@ -4,5 +4,6 @@ public enum GameMode {
     BLITZ,
     CLASSIC,
     BULLET,
-    CHESS960
+    CHESS960,
+    SIMUL
 }

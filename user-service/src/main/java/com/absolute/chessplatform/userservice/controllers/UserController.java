@@ -1,6 +1,7 @@
 package com.absolute.chessplatform.userservice.controllers;
 
 import com.absolute.chessplatform.userservice.dtos.GameResultDTO;
+import com.absolute.chessplatform.userservice.dtos.UserProfileDTO;
 import com.absolute.chessplatform.userservice.dtos.UserStatisticsDTO;
 import com.absolute.chessplatform.userservice.entities.UserStatistics;
 import com.absolute.chessplatform.userservice.services.UserService;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -17,7 +19,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class UserController {
 
-    private final Keycloak keycloak;
     private final UserService userService;
 
     @PostMapping("/updateStatistic/{id}")
@@ -25,5 +26,20 @@ public class UserController {
         userService.updateUserStatistic(id, gameResultDTO);
         return ResponseEntity.ok().build();
     }
+    @GetMapping("/getUsersProfiles/")
+    public ResponseEntity<List<UserProfileDTO>> getUserProfiles(@RequestParam("ids") List<UUID> ids) {
+        List<UserProfileDTO> userProfilesDTO = userService.getUsersProfilesByIds(ids);
+        return ResponseEntity.ok(userProfilesDTO);
+
+    }
+    @GetMapping("/statistics/classic/{userId}")
+    public ResponseEntity<UserStatisticsDTO> getClassicStats(@PathVariable UUID userId) {
+        return ResponseEntity.ok(userService.getClassicStatistics(userId));
+    }
+    @GetMapping("userProfile/{userId}")
+    public ResponseEntity<UserProfileDTO> getUserProfile(@PathVariable UUID userId){
+        return ResponseEntity.ok(userService.getUserProfile(userId));
+    }
+
 
 }

@@ -11,15 +11,31 @@ spring:
         - id: user-service
           uri: lb://user-service
           predicates:
-            - Path=/users/**
+            - Path=/api/users/**
           filters:
-            #            - name: "RequestRateLimiter"
+            - RemoveRequestHeader=Cookie
             - TokenRelay
 
         - id: matchmaking-service
           uri: lb://matchmaking-service
           predicates:
             - Path=/api/matchmaking/**
+
+          filters:
+            - RemoveRequestHeader=Cookie
+            - TokenRelay
+
+        - id: social-friends
+          uri: lb://social-community-service
+          predicates:
+            - Path=/api/friends/**
+          filters:
+            - RemoveRequestHeader=Cookie
+            - TokenRelay
+        - id: social-chats
+          uri: lb://social-community-service
+          predicates:
+            - Path=/api/chats/**
           filters:
             - RemoveRequestHeader=Cookie
             - TokenRelay

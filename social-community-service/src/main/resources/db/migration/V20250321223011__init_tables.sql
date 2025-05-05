@@ -8,9 +8,9 @@ CREATE TABLE forum_categories
 CREATE TABLE forum_threads
 (
     id          UUID PRIMARY KEY,
-    category_id INTEGER      NOT NULL,
+    category_id UUID      NOT NULL,
     title       VARCHAR(255) NOT NULL,
-    user_id     uuid         NOT NULL,
+    user_id     UUID         NOT NULL,
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_category FOREIGN KEY (category_id) REFERENCES forum_categories (id)
@@ -21,9 +21,9 @@ CREATE INDEX idx_forum_threads_user     ON forum_threads(user_id);
 CREATE TABLE forum_posts
 (
     id             UUID PRIMARY KEY,
-    thread_id      INTEGER NOT NULL,
-    user_id        UUID    NOT NULL,
-    parent_post_id INTEGER,
+    thread_id      UUID NOT NULL,
+    user_id        UUID NOT NULL,
+    parent_post_id UUID,
     content        TEXT    NOT NULL,
     created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -40,8 +40,8 @@ CREATE INDEX idx_forum_posts_user   ON forum_posts(user_id);
 CREATE TABLE blog_posts
 (
     id           UUID PRIMARY KEY,
-    user_id      uuid                NOT NULL,
-    category_id  INTEGER,
+    user_id      UUID                NOT NULL,
+    category_id  UUID,
     title        VARCHAR(255)        NOT NULL,
     slug         VARCHAR(255) UNIQUE NOT NULL,
     summary      TEXT,
@@ -61,7 +61,7 @@ CREATE INDEX idx_blog_posts_status   ON blog_posts(status);
 CREATE TABLE blog_comments
 (
     id           UUID PRIMARY KEY,
-    blog_post_id INTEGER NOT NULL,
+    blog_post_id UUID NOT NULL,
     user_id      UUID    NOT NULL,
     content      TEXT    NOT NULL,
     created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

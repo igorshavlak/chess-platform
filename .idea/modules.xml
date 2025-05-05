@@ -6,6 +6,8 @@
       <module fileurl="file://$PROJECT_DIR$/chess_platform.iml" filepath="$PROJECT_DIR$/chess_platform.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/game-management-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/game-management-service.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/matchmaking-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/matchmaking-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/notification-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/notification-service.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/user-service.main.iml" filepath="$PROJECT_DIR$/.idea/modules/user-service.main.iml" />
     </modules>
   </component>
 </project>
