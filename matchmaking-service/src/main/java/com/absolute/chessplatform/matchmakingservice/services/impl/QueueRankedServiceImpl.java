@@ -17,7 +17,7 @@ import java.util.UUID;
 @Service("rankedService")
 @AllArgsConstructor
 @Slf4j
-public class    QueueRankedServiceImpl implements MatchmakingService {
+public class QueueRankedServiceImpl implements MatchmakingService {
 
     private final QueueRankedRepository queueRankedRepository;
     //private final GameManagementClient gameManagementClient;

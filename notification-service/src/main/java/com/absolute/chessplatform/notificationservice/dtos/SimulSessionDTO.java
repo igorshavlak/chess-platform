@@ -1,9 +1,12 @@
 package com.absolute.chessplatform.notificationservice.dtos;
 
+import com.absolute.chessplatform.notificationservice.entities.PlayerMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Getter
@@ -18,6 +21,9 @@ public class SimulSessionDTO {
     private int additionalMasterTime;
     private boolean rating;
     private SimulStatus status;
-    private String masterNickname;
-    private int masterRating;
+    private int minRating;
+    private Instant startTime;
+    private PlayerInfo masterInfo;
+    private Map<UUID, PlayerInfo> playersInfo;
+    private Map<UUID, PlayerMessage> playersMessage;
 }

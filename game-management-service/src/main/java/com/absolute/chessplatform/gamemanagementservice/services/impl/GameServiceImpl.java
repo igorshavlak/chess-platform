@@ -27,15 +27,10 @@ public class GameServiceImpl implements GameService {
     private final NotificationService notificationService;
     private final RedisTemplate<String, ActiveGame> redisTemplate;
     private final TaskScheduler taskScheduler;
-    private static final long INITIAL_TIME_MILLIS = 10 * 60 * 1000;
-    private static final long INCREMENT_MILLIS = 0;
 
     private static final String GAME_PREFIX = "game:";
 
     private final Map<UUID, GameSession> sessions = new ConcurrentHashMap<>();
-    private final Map<UUID, SimulSession> simulSessions = new ConcurrentHashMap<>();
-
-
 
 
     public UUID createGame(CreateGameRequest createGameRequest) {
@@ -47,13 +42,21 @@ public class GameServiceImpl implements GameService {
         redisTemplate.opsForValue().set(GAME_PREFIX + gameId, game);
         log.info("Active game {} created between {} and {}", gameId, whitePlayerId, blackPlayerId);
         String[] timeControl = createGameRequest.getTimeControl().split("\\+");
+        long baseMillis = Long.parseLong(timeControl[0]) * 60_000;
+        long incMillis  = Long.parseLong(timeControl[1]) * 1000;
+        long extraInc   = createGameRequest.getAdditionalTime() * 1000L;
+        long increment  = incMillis + extraInc;
         GameSession session = new GameSession(
                 gameId,
-                Long.parseLong(timeControl[0]) * 60 * 1000,
-                Long.parseLong(timeControl[1]) * 1000,
+                baseMillis,
+                increment,
                 createGameRequest.getGameMode(),
                 createGameRequest.getTimeControl(),
                 createGameRequest.isRating());
+
+        long now = System.currentTimeMillis();
+        session.setLastMoveTimestamp(now);
+
         sessions.put(gameId, session);
 
         log.info("Game {} created and timeout scheduled", gameId);
@@ -85,7 +88,7 @@ public class GameServiceImpl implements GameService {
         if (move.charAt(move.length() - 1) == '#') {
             concludeGame(gameId, GameStatus.CHECKMATE, session.getActivePlayerIsWhite());
             sessions.remove(session.getGameId());
-            throw new GameEndException("Game over by checkmate");
+            log.info("Game over by checkmate");
         }
         synchronized (session) {
             long now = System.currentTimeMillis();
@@ -106,7 +109,18 @@ public class GameServiceImpl implements GameService {
 
             scheduleTimeout(session);
         }
-        return new MoveResult(gameId, move, session.getWhiteRemaining(),session.getBlackRemaining(),session.getActivePlayerIsWhite());
+        long whiteDeadline = session.getLastMoveTimestamp() + session.getWhiteRemaining();
+        long blackDeadline = session.getLastMoveTimestamp() + session.getBlackRemaining();
+
+        return new MoveResult(
+                gameId,
+                move,
+                session.getWhiteRemaining(),
+                session.getBlackRemaining(),
+                session.getActivePlayerIsWhite(),
+                whiteDeadline,
+                blackDeadline
+        );
     }
 
     public void concludeGame(UUID gameId, GameStatus gameStatus, boolean isWhitePlayerWinner) {
@@ -126,7 +140,7 @@ public class GameServiceImpl implements GameService {
         game.setMoves(activeGame.moves());
         game.setGameType("-");
         game.setCreatedAt(activeGame.startTime());
-        gameRepository.save(game);
+//        gameRepository.save(game);
         notificationService.sendGameConcludedNotification(new ConcludeGameNotification(gameId,gameStatus,isWhitePlayerWinner));
         log.info("Game {} concluded with status {}", gameId, gameStatus.toString());
     }
@@ -138,18 +152,69 @@ public class GameServiceImpl implements GameService {
         if (game == null || session == null) {
             throw new ResourceNotFoundException("Active game not found");
         }
-        return new ActiveGameDTO(
-                game.whitePlayerId(),
-                game.blackPlayerId(),
-                game.moves(),
-                game.startTime(),
-                session.getWhiteRemaining(),
-                session.getBlackRemaining(),
-                session.getGameMode(),
-                session.getTimeControl(),
-                session.isRating()
-        );
+        return initActiveGame(game, session);
     }
+    @Override
+    public List<ActiveGameDTO> getGamesInfo(List<UUID> gameIds) {
+        List<String> keys = gameIds.stream()
+                .map(gameId -> GAME_PREFIX + gameId.toString())
+                .collect(Collectors.toList());
+
+        List<ActiveGame> games = redisTemplate.opsForValue().multiGet(keys);
+        List<ActiveGameDTO> gameDTOs = new ArrayList<>();
+
+        for (int i = 0; i < gameIds.size(); i++) {
+            ActiveGame game = games.get(i);
+            if (game == null) {
+                throw new ResourceNotFoundException("Active game not found for game ID: " + gameIds.get(i));
+            }
+            GameSession session = sessions.get(gameIds.get(i));
+            if (session == null) {
+                throw new ResourceNotFoundException("Game session not found for game ID: " + gameIds.get(i));
+            }
+            ActiveGameDTO dto = initActiveGame(game, session);
+            gameDTOs.add(dto);
+        }
+        return gameDTOs;
+    }
+
+    private ActiveGameDTO initActiveGame(ActiveGame game, GameSession session) {
+        ActiveGameDTO dto = new ActiveGameDTO();
+        dto.setGameId(session.getGameId());
+        dto.setWhitePlayerId(game.whitePlayerId());
+        dto.setBlackPlayerId(game.blackPlayerId());
+        dto.setMoves(game.moves());
+        dto.setStartTime(game.startTime());
+        dto.setWhiteTimeMillis(session.getWhiteRemaining());
+        dto.setBlackTimeMillis(session.getBlackRemaining());
+        dto.setGameMode(session.getGameMode());
+        dto.setTimeControl(session.getTimeControl());
+        dto.setRating(session.isRating());
+        dto.setIncrementMillis(session.getIncrementMillis());
+        dto.setActivePlayerIsWhite(session.getActivePlayerIsWhite());
+        dto.setLastMoveTimestamp(session.getLastMoveTimestamp());
+        dto.setWhiteDeadline(session.getLastMoveTimestamp() + session.getWhiteRemaining());
+        dto.setBlackDeadline(session.getLastMoveTimestamp() + session.getBlackRemaining());
+
+        long now = System.currentTimeMillis();
+        if (game.moves().isEmpty()) {
+            // Якщо ходів немає, дедлайни базуються на початковому часі
+            dto.setWhiteDeadline(now + session.getWhiteRemaining());
+            dto.setBlackDeadline(now + session.getBlackRemaining());
+        } else {
+            // Для активного гравця дедлайн = lastMoveTimestamp + remaining
+            // Для неактивного гравця дедлайн = now + remaining
+            if (session.getActivePlayerIsWhite()) {
+                dto.setWhiteDeadline(session.getLastMoveTimestamp() + session.getWhiteRemaining());
+                dto.setBlackDeadline(now + session.getBlackRemaining());
+            } else {
+                dto.setWhiteDeadline(now + session.getWhiteRemaining());
+                dto.setBlackDeadline(session.getLastMoveTimestamp() + session.getBlackRemaining());
+            }
+        }
+        return dto;
+    }
+
     private void scheduleTimeout(GameSession gameSession) {
         boolean isActivePlayerIsWhite = gameSession.getActivePlayerIsWhite();
         long delay = gameSession.getRemainingTime(isActivePlayerIsWhite);

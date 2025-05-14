@@ -1,5 +1,7 @@
 package com.absolute.chessplatform.gamemanagementservice.services;
 
+import com.absolute.chessplatform.gamemanagementservice.dtos.ActiveGameDTO;
+import com.absolute.chessplatform.gamemanagementservice.dtos.SimulGamesDTO;
 import com.absolute.chessplatform.gamemanagementservice.dtos.SimulSessionDTO;
 import com.absolute.chessplatform.gamemanagementservice.entities.GameMode;
 
@@ -19,10 +21,11 @@ public interface SimulLobbyService {
                                int minRating,
                                int additionalMasterTime);
     void joinSimulLobby(UUID lobbyId, UUID playerId);
-    UUID startSimulSession(UUID lobbyId);
+    SimulGamesDTO startSimulSession(UUID lobbyId);
     void confirmSimulPlayer(UUID lobbyId, UUID playerToConfirm, Principal principal);
     List<SimulSessionDTO> getSimulLobbies();
     SimulSessionDTO getSimulLobby(UUID lobbyId);
     void sendSimulLobbyPlayerMessage(UUID lobbyId, UUID playerId, String message);
     void removePlayerFromConfirms(UUID lobbyId, UUID playerId, Principal principal);
+    List<ActiveGameDTO> getSimulGames(UUID simulSessionId);
 }

@@ -110,10 +110,28 @@ VALUES ('a41d2e66-69a2-45ab-bb37-7805e154dfcd',
         'igor',
         'shavlak',
         'Front-end engineer specialising in React',
-        'Lviv, Ukraine');
+        'Lviv, Ukraine'),
+    ('9a0050e9-fc66-4686-b7f0-4f86774fdbdc',
+     'igorshavlak3',
+     'igor',
+     'shavlak',
+     'test123'
+     'Kyiv','Ukraine'
+       ),
+    ('2c525b6a-e8f9-40cc-b65f-dd18aadcc8ed',
+     'igorshavlak4',
+     'igor',
+     'shavlak',
+     'test1234'
+         'Kyiv','Ukraine'
+       );
 INSERT INTO user_statistics(user_id,
                             mode)
 VALUES ('a41d2e66-69a2-45ab-bb37-7805e154dfcd',
         'CLASSIC'),
        ('5010d815-62bd-4996-80fa-a028728b03f6',
+        'CLASSIC'),
+       ('9a0050e9-fc66-4686-b7f0-4f86774fdbdc',
+        'CLASSIC'),
+       ('2c525b6a-e8f9-40cc-b65f-dd18aadcc8ed',
         'CLASSIC')

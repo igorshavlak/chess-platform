@@ -43,6 +43,8 @@ public class GameController {
                         .isActivePlayerWhite(result.isActivePlayerIsWhite())
                         .senderId(clientId)
                         .serverTimestampMillis(System.currentTimeMillis())
+                        .whiteDeadline(result.getWhiteDeadline())   // <-- дедлайн для білого
+                        .blackDeadline(result.getBlackDeadline())
                         .build();
                 messagingTemplate.convertAndSend("/topic/game/" + result.getGameId(), response);
 

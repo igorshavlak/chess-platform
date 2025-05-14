@@ -14,4 +14,5 @@ public interface GameService {
     void concludeGame(UUID gameId, GameStatus gameStatus,boolean isWhitePlayerWinner);
     ActiveGameDTO getGameInfo(UUID gameId);
     GameSession getGameSession(UUID gameId);
+    public List<ActiveGameDTO> getGamesInfo(List<UUID> gameIds);
 }

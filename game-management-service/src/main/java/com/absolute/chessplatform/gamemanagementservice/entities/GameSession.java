@@ -43,7 +43,9 @@ public class GameSession {
     public void setRemainingTime(boolean isWhite, long time) {
         if (isWhite) {
             whiteRemaining = time;
+        } else {
+            blackRemaining = time;
         }
-        blackRemaining = time;
+
     }
 }

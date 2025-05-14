@@ -45,7 +45,7 @@ public class QueueUnrankedServiceImpl implements MatchmakingService {
 
         QueueEntry whitePlayer = isFirstWhite ? firstOpt.get() : secondOpt.get();
         QueueEntry blackPlayer = isFirstWhite ? secondOpt.get() : firstOpt.get();
-        CreateGameRequest match = new CreateGameRequest(UUID.randomUUID(), whitePlayer.getUserId(), blackPlayer.getUserId(), extractGameMode(key), extractTimeControl(key), false);
+        CreateGameRequest match = new CreateGameRequest(UUID.randomUUID(), whitePlayer.getUserId(), blackPlayer.getUserId(), extractGameMode(key), extractTimeControl(key), false,0);
         UUID gameId = gameManagementClient.createGame(match).getBody();
         notificationServiceClient.sendGameFoundNotification(new GameFoundNotificationRequest(gameId,match.getWhitePlayerId(),match.getBlackPlayerId(), extractGameMode(key), extractTimeControl(key),false));
         log.info("[{}] Unranked Match created: {} vs {}", key, whitePlayer.getUserId(), blackPlayer.getUserId());

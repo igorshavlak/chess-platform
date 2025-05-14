@@ -36,10 +36,16 @@ public class UserController {
     public ResponseEntity<UserStatisticsDTO> getClassicStats(@PathVariable UUID userId) {
         return ResponseEntity.ok(userService.getClassicStatistics(userId));
     }
-    @GetMapping("userProfile/{userId}")
+    @GetMapping("/userProfile/{userId}")
     public ResponseEntity<UserProfileDTO> getUserProfile(@PathVariable UUID userId){
         return ResponseEntity.ok(userService.getUserProfile(userId));
     }
-
-
+    @GetMapping("/search")
+    public ResponseEntity<List<UserProfileDTO>> searchUsers(
+            @RequestParam String nickname,
+            @RequestParam UUID requesterId
+    ) {
+        List<UserProfileDTO> results = userService.searchUsersByNickname(nickname, requesterId);
+        return ResponseEntity.ok(results);
+    }
 }

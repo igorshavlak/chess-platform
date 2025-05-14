@@ -15,4 +15,6 @@ public class MoveResult {
     private long whiteTimeMillis;
     private long blackTimeMillis;
     private boolean activePlayerIsWhite;
+    private long whiteDeadline;
+    private long blackDeadline;
 }

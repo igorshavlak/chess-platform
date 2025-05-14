@@ -1,6 +1,8 @@
 package com.absolute.chessplatform.gamemanagementservice.controllers;
 
+import com.absolute.chessplatform.gamemanagementservice.dtos.ActiveGameDTO;
 import com.absolute.chessplatform.gamemanagementservice.dtos.CreateSimulRequestDTO;
+import com.absolute.chessplatform.gamemanagementservice.dtos.SimulGamesDTO;
 import com.absolute.chessplatform.gamemanagementservice.dtos.SimulSessionDTO;
 import com.absolute.chessplatform.gamemanagementservice.entities.SimulSession;
 import com.absolute.chessplatform.gamemanagementservice.services.SimulLobbyService;
@@ -40,9 +42,9 @@ public class SimulLobbyController {
         return ResponseEntity.ok().build();
     }
     @PostMapping("/lobby/{lobbyId}/start")
-    public ResponseEntity<UUID> startSimul(@PathVariable UUID lobbyId) {
-        UUID simulId = simulLobbyService.startSimulSession(lobbyId);
-        return ResponseEntity.ok(simulId);
+    public ResponseEntity<SimulGamesDTO> startSimul(@PathVariable UUID lobbyId) {
+        SimulGamesDTO simulGamesDTO = simulLobbyService.startSimulSession(lobbyId);
+        return ResponseEntity.ok(simulGamesDTO);
     }
     @PostMapping("/lobby/getLobbies")
     public ResponseEntity<List<SimulSessionDTO>> getSimulLobbies(){
@@ -50,7 +52,7 @@ public class SimulLobbyController {
         return ResponseEntity.ok(simulSessionDTOS);
     }
     @PostMapping("/lobby/{lobbyId}/message")
-    public ResponseEntity<String> sendSimulPlayerPlayerMessage(@PathVariable UUID lobbyId, @RequestParam UUID playerId, String message){
+    public ResponseEntity<String> sendSimulPlayerPlayerMessage(@PathVariable UUID lobbyId, @RequestParam("playerId") UUID playerId, @RequestParam("message") String message){
         simulLobbyService.sendSimulLobbyPlayerMessage(lobbyId, playerId, message);
         return ResponseEntity.ok("Message was send");
     }
@@ -64,10 +66,15 @@ public class SimulLobbyController {
         simulLobbyService.confirmSimulPlayer(lobbyId,playerId,principal);
         return ResponseEntity.ok("player was confirmed");
     }
-    @PostMapping("/lobby/removePlayerFromConfirms/{lobbyId}")
-    public ResponseEntity<String> removePlayerFromConfirms(@PathVariable UUID lobbyId, @RequestParam UUID playerId, Principal principal){
-        simulLobbyService.
-
+    @GetMapping("/getSimulGames/{lobbyId}")
+    public ResponseEntity<List<ActiveGameDTO>> getSimulGames(@PathVariable UUID lobbyId){
+        List<ActiveGameDTO> activeGameDTOS = simulLobbyService.getSimulGames(lobbyId);
+        return ResponseEntity.ok(activeGameDTOS);
     }
+//    @PostMapping("/lobby/removePlayerFromConfirms/{lobbyId}")
+//    public ResponseEntity<String> removePlayerFromConfirms(@PathVariable UUID lobbyId, @RequestParam UUID playerId, Principal principal){
+//        simulLobbyService.
+//
+//    }
 
 }

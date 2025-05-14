@@ -45,12 +45,19 @@ public class NotificationController {
         notificationService.sendJoinedSimulLobbyPlayer(playerInfo, lobbyId);
         return ResponseEntity.ok("Player was joined");
     }
-    @PostMapping("/removeSimulPlayerFromConfirms/{lobbyId}")
-    public ResponseEntity<String> removePlayerFromConfirms(@RequestParam UUID playerId, @PathVariable UUID lobbyId) {
-
+    @PostMapping("/startSimulLobby/{playerId}")
+    public ResponseEntity<String> startSimulLobby(@PathVariable UUID playerId, @RequestBody UUID gameId) {
+        notificationService.sendStartSimulLobby(playerId, gameId);
+        return ResponseEntity.ok("Message was sent ");
     }
+//    @PostMapping("/removeSimulPlayerFromConfirms/{lobbyId}")
+//    public ResponseEntity<String> removePlayerFromConfirms(@RequestParam UUID playerId, @PathVariable UUID lobbyId) {
+//
+//    }
     @PostMapping("/confirmSimulPlayer/{lobbyId}")
-    public ResponseEntity<String> confirmSimulPlayer(@RequestParam UUID playerId, @PathVariable UUID lobbyId) {
-
+    public ResponseEntity<String> confirmSimulPlayer(@PathVariable UUID lobbyId, @RequestBody PlayerInfoDTO playerInfoDTO) {
+        notificationService.sendConfirmedSimulLobbyPlayer(playerInfoDTO, lobbyId);
+        return ResponseEntity.ok("Player was confirmed");
     }
+
 }

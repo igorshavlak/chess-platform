@@ -211,4 +211,8 @@ public class UserServiceImpl implements UserService {
                 userProfile.getSocialLinks()
         );
     }
+    public List<UserProfileDTO> searchUsersByNickname(String nickname,  UUID requesterId) {
+        List<UserProfile> users = userProfileRepository.findByUsernameContainingIgnoreCaseAndUserIdNot(nickname, requesterId);
+        return users.stream().map(UserProfileDTO::fromEntity).toList();
+    }
 }

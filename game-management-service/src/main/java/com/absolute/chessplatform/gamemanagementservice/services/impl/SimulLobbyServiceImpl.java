@@ -2,9 +2,7 @@ package com.absolute.chessplatform.gamemanagementservice.services.impl;
 
 import com.absolute.chessplatform.gamemanagementservice.clients.NotificationServiceClient;
 import com.absolute.chessplatform.gamemanagementservice.clients.UserServiceClient;
-import com.absolute.chessplatform.gamemanagementservice.dtos.SimulSessionDTO;
-import com.absolute.chessplatform.gamemanagementservice.dtos.UserProfileDTO;
-import com.absolute.chessplatform.gamemanagementservice.dtos.UserStatisticsDTO;
+import com.absolute.chessplatform.gamemanagementservice.dtos.*;
 import com.absolute.chessplatform.gamemanagementservice.entities.*;
 import com.absolute.chessplatform.gamemanagementservice.exception.ResourceNotFoundException;
 import com.absolute.chessplatform.gamemanagementservice.services.GameService;
@@ -14,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -82,9 +81,18 @@ public class SimulLobbyServiceImpl implements SimulLobbyService {
             return;
         }
         lobby.getJoinedPlayerIds().add(playerId);
-        lobby.getPlayersInfo().put(playerId, loadPlayerInfo(playerId));
-
+        PlayerInfo playerInfo = loadPlayerInfo(playerId);
+        lobby.getPlayersInfo().put(playerId, playerInfo);
+        notificationServiceClient.sendSimulLobbyPlayer(PlayerInfoDTO.fromEntity(playerInfo),lobbyId);
     }
+
+    @Override
+    public List<ActiveGameDTO> getSimulGames(UUID simulSessionId) {
+        SimulSession simulSession = simulSessions.get(simulSessionId);
+        List<UUID> gameIds = simulSession.getGameIds();
+        return gameService.getGamesInfo(gameIds);
+    }
+
 
     @Override
     public void sendSimulLobbyPlayerMessage(UUID lobbyId, UUID playerId, String message) {
@@ -92,21 +100,22 @@ public class SimulLobbyServiceImpl implements SimulLobbyService {
         if (lobby == null) {
             throw new ResourceNotFoundException("Lobby not found");
         }
-        if (lobby.getJoinedPlayerIds().contains(playerId)) {
-            return;
-        }
         PlayerInfo playerInfo = lobby.getPlayersInfo().get(playerId);
+        if(lobby.getMasterId().equals(playerId)){
+            playerInfo = lobby.getMasterInfo();
+        }
         PlayerMessage playerMessage = new PlayerMessage(message, playerInfo);
         lobby.getPlayersMessage().put(playerId, playerMessage);
-
+        notificationServiceClient.sendSimulLobbyMessage(new PlayerMessageDTO(message,playerInfo),lobby.getSimulId());
     }
-
     @Override
     public void confirmSimulPlayer(UUID lobbyId,
                                    UUID playerToConfirm,
                                    Principal principal) {
-        String sub = ((Jwt) ((UsernamePasswordAuthenticationToken) principal)
-                .getPrincipal()).getClaim("sub");
+        JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) principal;
+        // 2) Отримуємо сам Jwt і читаємо суб’єкт
+        Jwt jwt = jwtAuth.getToken();
+        String sub = jwt.getSubject();            // це те саме, що claim "sub"
         UUID authUserId = UUID.fromString(sub);
 
         SimulSession lobby = simulSessions.get(lobbyId);
@@ -120,12 +129,16 @@ public class SimulLobbyServiceImpl implements SimulLobbyService {
             throw new IllegalArgumentException("Player is not waiting");
         }
         lobby.getOpponentIds().add(playerToConfirm);
+        lobby.getJoinedPlayerIds().remove(playerToConfirm);
+        notificationServiceClient.confirmSimulPlayer(lobbyId, PlayerInfoDTO.fromEntity(lobby.getPlayersInfo().get(playerToConfirm)));
     }
 
     @Override
     public void removePlayerFromConfirms(UUID lobbyId, UUID playerId, Principal principal){
-        String sub = ((Jwt) ((UsernamePasswordAuthenticationToken) principal)
-                .getPrincipal()).getClaim("sub");
+        JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) principal;
+        // 2) Отримуємо сам Jwt і читаємо суб’єкт
+        Jwt jwt = jwtAuth.getToken();
+        String sub = jwt.getSubject();            // це те саме, що claim "sub"
         UUID authUserId = UUID.fromString(sub);
         SimulSession lobby = simulSessions.get(lobbyId);
         if (lobby == null) {
@@ -142,29 +155,45 @@ public class SimulLobbyServiceImpl implements SimulLobbyService {
 
 
     @Override
-    public UUID startSimulSession(UUID lobbyId) {
+    public SimulGamesDTO startSimulSession(UUID lobbyId) {
         SimulSession lobby = simulSessions.get(lobbyId);
         if (lobby == null || lobby.getStatus() != SimulStatus.LOBBY) {
             throw new IllegalStateException("Cannot start: invalid lobby or lobby was started");
         }
         UUID master = lobby.getMasterId();
-        List<UUID> opponents = lobby.getJoinedPlayerIds().stream()
+        List<UUID> opponents = lobby.getOpponentIds().stream()
                 .filter(id -> !id.equals(master))
                 .toList();
+        Map<UUID, UUID> gamesPlayerIds = new HashMap<>();
+
 
         List<UUID> createdGameIds = opponents.stream()
-                .map(op -> gameService.createGame(CreateGameRequest.builder()
-                        .whitePlayerId(master)
-                        .blackPlayerId(op)
-                        .gameMode(lobby.getGameMode())
-                        .timeControl(lobby.getTimeControl())
-                        .isRating(lobby.isRating())
-                        .build()))
+                .map(op -> {
+                    UUID gameId = gameService.createGame(CreateGameRequest.builder()
+                            .whitePlayerId(master)
+                            .blackPlayerId(op)
+                            .gameMode(lobby.getGameMode())
+                            .timeControl(lobby.getTimeControl())
+                            .isRating(lobby.isRating())
+                            .additionalTime(lobby.getAdditionalMasterTime())
+                            .build());
+
+                    // Додавання пари гри та опонента в мапу
+                    gamesPlayerIds.put(gameId, op);
+
+                    return gameId;
+                })
                 .toList();
+
 
         lobby.setGameIds(createdGameIds);
         lobby.setStatus(SimulStatus.STARTED);
-        return lobbyId;
+        gamesPlayerIds.forEach((gameId, playerId) -> {
+            notificationServiceClient.startSimulLobby(playerId, gameId);
+        });
+
+
+        return new SimulGamesDTO(lobbyId, master, gamesPlayerIds);
 
     }
 
@@ -179,8 +208,8 @@ public class SimulLobbyServiceImpl implements SimulLobbyService {
     @Override
     public SimulSessionDTO getSimulLobby(UUID lobbyId) {
         SimulSession lobby = simulSessions.get(lobbyId);
-        if (lobby == null || lobby.getStatus() != SimulStatus.LOBBY) {
-            throw new IllegalStateException("Cannot start: invalid lobby or lobby was started");
+        if (lobby == null) {
+            throw new IllegalStateException("Cannot start: invalid lobby");
         }
         return SimulSessionDTO.fromEntity(lobby);
     }

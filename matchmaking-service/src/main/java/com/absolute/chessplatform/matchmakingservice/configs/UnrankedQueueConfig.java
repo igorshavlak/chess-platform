@@ -31,4 +31,28 @@ public class UnrankedQueueConfig {
                 1000
         );
     }
+    @Bean
+    public IQueueWorker blitz3plus0UnrankedWorker() {
+        return new UnrankedQueueWorker(
+                "queue:blitz:3+0:unranked",
+                unrankedService,
+                1000
+        );
+    }
+    @Bean
+    public IQueueWorker bullet1plus0UnrankedWorker() {
+        return new UnrankedQueueWorker(
+                "queue:bullet:1+0:unranked",
+                unrankedService,
+                1000
+        );
+    }
+    @Bean
+    public IQueueWorker bullet2plus1UnrankedWorker() {
+        return new UnrankedQueueWorker(
+                "queue:bullet:2+1:unranked",
+                unrankedService,
+                1000
+        );
+    }
 }

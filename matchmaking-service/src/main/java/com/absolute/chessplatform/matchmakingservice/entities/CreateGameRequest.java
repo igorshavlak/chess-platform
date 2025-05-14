@@ -16,4 +16,5 @@ public class CreateGameRequest {
     private GameMode gameMode;
     private String timeControl;
     private boolean isRating;
+    private int additionalTime = 0;
 }

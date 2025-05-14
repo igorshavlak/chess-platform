@@ -19,6 +19,8 @@ public class MoveResponseDTO {
     long blackTimeMillis;
     boolean isActivePlayerWhite;
     long serverTimestampMillis;
+    private long whiteDeadline;
+    private long blackDeadline;
 
 
 }

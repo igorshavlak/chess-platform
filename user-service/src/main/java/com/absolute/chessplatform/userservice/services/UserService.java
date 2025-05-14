@@ -16,4 +16,5 @@ public interface UserService {
      List<UserProfileDTO> getUsersProfilesByIds(List<UUID> uuids);
      UserStatisticsDTO getClassicStatistics(UUID userId);
      UserProfileDTO getUserProfile(UUID userId);
+     List<UserProfileDTO> searchUsersByNickname(String nickname,  UUID requesterId);
 }

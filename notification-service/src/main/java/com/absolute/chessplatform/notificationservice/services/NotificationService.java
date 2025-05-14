@@ -32,5 +32,10 @@ public class NotificationService {
     public void sendJoinedSimulLobbyPlayer(PlayerInfoDTO playerInfoDTO, UUID lobbyId){
         messagingTemplate.convertAndSend("/topic/simul/lobby/" + lobbyId + "/newPlayer", playerInfoDTO);
     }
-
+    public void sendConfirmedSimulLobbyPlayer(PlayerInfoDTO playerInfoDTO, UUID lobbyId){
+        messagingTemplate.convertAndSend("/topic/simul/lobby/" + lobbyId + "/confirm", playerInfoDTO);
+    }
+    public void sendStartSimulLobby(UUID playerId, UUID gameId){
+        messagingTemplate.convertAndSend("/topic/simul/lobby/" + playerId + "/start", gameId);
+    }
 }
